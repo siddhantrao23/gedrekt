@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 using namespace std;
 
-template<typename T, typename C>
-int levenshtein(const T& seq1, const T& seq2, const C& cost,
-                const typename T::value_type& empty = typename T::value_type()) {
+template<typename ptr_t, typename T, typename binop_t>
+T levenshtein(const ptr_t& seq1, const ptr_t& seq2, T init, binop_t cost) {
     const int size1 = seq1.size();
     const int size2 = seq2.size();
 
@@ -14,15 +14,15 @@ int levenshtein(const T& seq1, const T& seq2, const C& cost,
 
     prev[0] = 0;
     for (int idx2 = 0; idx2 < size2; ++idx2) {
-        prev[idx2 + 1] = prev[idx2] + cost(empty, seq2[idx2]);
+        prev[idx2 + 1] = prev[idx2] + cost(init, seq2[idx2]);
     }
 
     for (int idx1 = 0; idx1 < size1; ++idx1) {
-        curr[0] = curr[0] + cost(empty, seq1[idx1]);
+        curr[0] = curr[0] + cost(init, seq1[idx1]);
         for (int idx2 = 0; idx2 < size2; ++idx2) {
             curr[idx2+1] = min(min(
-                                   curr[idx2] + cost(empty, seq2[idx2]),
-                                   prev[idx2+1] + cost(empty, seq1[idx1])
+                                   curr[idx2] + cost(init, seq2[idx2]),
+                                   prev[idx2+1] + cost(init, seq1[idx1])
                                ),
                                prev[idx2] + cost(seq1[idx1], seq2[idx2]));
         }
@@ -33,11 +33,22 @@ int levenshtein(const T& seq1, const T& seq2, const C& cost,
 }
 
 template<typename T>
-int cost(const T& w1, const T& w2) {
-    return w1 != w2 ? 1 : 0;
-}
+struct Cost {
+    int operator()(const T& w1, const T& w2) {
+        return w1 != w2 ? 1 : 0;
+    }
+};
 
 int main() {
-    int a = levenshtein("cat", "dog", &cost);
+    string a1 = "cat";
+    string b1 = "car";
+    auto res1 = levenshtein(a1, b1, 0, Cost<char>());
+    cout << "res1 : " << res1 << "\n";
+
+    vector<int> v1{10, 20, 30, 40, 50};
+    vector<int> v2{10, 22, 30, 40, 50};
+    auto res2 = levenshtein(v1, v2, 0, Cost<int>());
+    cout << "res2 : " << res2 << "\n";
+
     return 0;
 }
