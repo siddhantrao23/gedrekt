@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <deque>
 
 using namespace std;
 
@@ -49,6 +50,15 @@ int main() {
     vector<int> v2{10, 22, 30, 40, 50};
     auto res2 = levenshtein(v1, v2, 0, Cost<int>());
     cout << "res2 : " << res2 << "\n";
+
+    int a[] = {1, 2, 3, 4};
+    int b[] = {1, 1, 2, 3};
+    deque<int> d1(a, a + 4);
+    deque<int> d2(b, b + 4);
+    auto res3 = levenshtein(d1, d2, 0, Cost<int>());
+    cout << "res3 : " << res3 << "\n";
+
+    // doesn't work for lists
 
     return 0;
 }
