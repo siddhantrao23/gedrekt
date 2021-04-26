@@ -6,9 +6,23 @@
 #include <deque>
 #include <list>
 
+struct InsertionCost { int i; InsertionCost(int temp = 1): i(temp){}; };
+struct DeletionCost { int d; DeletionCost(int temp = 1): d(temp){}; };
+struct SubstitutionCost { int s; SubstitutionCost(int temp = 1): s(temp){}; };
+
+struct Cost
+{
+    InsertionCost ic;
+    DeletionCost dc;
+    SubstitutionCost sc;
+    Cost():ic(1), dc(1), sc(1) {}
+    Cost(InsertionCost i, DeletionCost d, SubstitutionCost s ):ic(i), dc(d), sc(s) {}
+};
+
 template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
 int levenshtein(const ptr_t begin1, const ptr_t end1,
                 const ptr_t begin2, const ptr_t end2,
+                const Cost cost = Cost(),
                 const eq_pred_t equals = eq_pred_t())
 {
     int deletion_cost, insertion_cost, substitution_cost;
@@ -30,12 +44,12 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
         curr[0] = i + 1;
         ptr_t b2 = begin2;
         for (int j = 0; j < size2; j++) {
-            deletion_cost = prev[j + 1] + 1;
-            insertion_cost = curr[j] + 1;
+            deletion_cost = prev[j + 1] + cost.dc.d;
+            insertion_cost = curr[j] + cost.ic.i;
             if (equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
-                substitution_cost = prev[j] + 1;
+                substitution_cost = prev[j] + cost.sc.s;
             }
             curr[j+1] = std::min({deletion_cost, insertion_cost, substitution_cost});
             b2++;
@@ -51,13 +65,17 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
 int main() {
     std::string a1 = "car";
     std::string b1 = "cat";
-    int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), [](auto x, auto y) { return x == y; });
+    int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), Cost{}, [](auto x, auto y) { return x == y; });
     std::cout << "res1 : " << res1 << "\n";
 
     std::vector<int> v1{10, 20, 30, 40, 50};
     std::vector<int> v2{10, 22, 30, 40, 50};
-    auto res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2));
-    std::cout << "res2 : " << res2 << "\n";
+    Cost c1{InsertionCost(2),DeletionCost(2),SubstitutionCost(2)};
+    Cost c2(InsertionCost(2),DeletionCost(2),SubstitutionCost(2));
+    auto res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c1);
+    std::cout << "res2a : " << res2 << "\n";
+    res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c2);
+    std::cout << "res2b : " << res2 << "\n";
 
     int a[] = {1, 2, 3, 4};
     int b[] = {1, 1, 2, 3};
