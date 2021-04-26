@@ -1,64 +1,69 @@
 #include <iostream>
+#include <iterator>
+#include <functional>
 #include <vector>
 #include <string>
 #include <deque>
+#include <list>
 
-using namespace std;
+template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
+int levenshtein(const ptr_t begin1, const ptr_t end1, const ptr_t begin2, const ptr_t end2, eq_pred_t equals = eq_pred_t())
+{
+    int deletion_cost, insertion_cost, substitution_cost;
 
-template<typename ptr_t, typename T, typename binop_t>
-T levenshtein(const ptr_t& seq1, const ptr_t& seq2, T init, binop_t cost) {
-    const int size1 = seq1.size();
-    const int size2 = seq2.size();
+    // gets sizes of the collection
+    int size1 = std::distance(begin1, end1);
+    int size2 = std::distance(begin2, end2);
 
-    vector<int> curr(size2 + 1);
-    vector<int> prev(size1 + 1);
+    std::vector<int> prev(size2 + 1);
+    std::vector<int> curr(size2 + 1);
 
-    prev[0] = 0;
-    for (int idx2 = 0; idx2 < size2; ++idx2) {
-        prev[idx2 + 1] = prev[idx2] + cost(init, seq2[idx2]);
+    for (int i = 0; i < size2 + 1; i++) {
+        prev[i] = i;
     }
 
-    for (int idx1 = 0; idx1 < size1; ++idx1) {
-        curr[0] = curr[0] + cost(init, seq1[idx1]);
-        for (int idx2 = 0; idx2 < size2; ++idx2) {
-            curr[idx2+1] = min(min(
-                                   curr[idx2] + cost(init, seq2[idx2]),
-                                   prev[idx2+1] + cost(init, seq1[idx1])
-                               ),
-                               prev[idx2] + cost(seq1[idx1], seq2[idx2]));
+    ptr_t b1 = begin1;
+    for (int i = 0; i < size1; i++) {
+        curr[0] = i + 1;
+        ptr_t b2 = begin2;
+        for (int j = 0; j < size2; j++) {
+            deletion_cost = prev[j + 1] + 1;
+            insertion_cost = curr[j] + 1;
+            if (equals(*b1, *b2)) {
+                substitution_cost = prev[j];
+            } else {
+                substitution_cost = prev[j] + 1;
+            }
+            curr[j+1] = std::min({deletion_cost, insertion_cost, substitution_cost});
+            b2++;
         }
+        b1++;
         curr.swap(prev);
-        curr[0] = prev[0];
     }
     return prev[size2];
 }
 
-template<typename T>
-struct Cost {
-    int operator()(const T& w1, const T& w2) {
-        return w1 != w2 ? 1 : 0;
-    }
-};
-
 int main() {
-    string a1 = "cat";
-    string b1 = "car";
-    auto res1 = levenshtein(a1, b1, 0, Cost<char>());
-    cout << "res1 : " << res1 << "\n";
-
-    vector<int> v1{10, 20, 30, 40, 50};
-    vector<int> v2{10, 22, 30, 40, 50};
-    auto res2 = levenshtein(v1, v2, 0, Cost<int>());
-    cout << "res2 : " << res2 << "\n";
+    std::string a1 = "car";
+    std::string b1 = "cat";
+    int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), [](auto x, auto y) { return x == y; });
+    std::cout << "res1 : " << res1 << "\n";
+    std::vector<int> v1{10, 20, 30, 40, 50};
+    std::vector<int> v2{10, 22, 30, 40, 50};
+    auto res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2));
+    std::cout << "res2 : " << res2 << "\n";
 
     int a[] = {1, 2, 3, 4};
     int b[] = {1, 1, 2, 3};
-    deque<int> d1(a, a + 4);
-    deque<int> d2(b, b + 4);
-    auto res3 = levenshtein(d1, d2, 0, Cost<int>());
-    cout << "res3 : " << res3 << "\n";
+    std::deque<int> d1(a, a + 4);
+    std::deque<int> d2(b, b + 4);
+    auto res3 = levenshtein(begin(d1), end(d1), begin(d2), end(d2));
+    std::cout << "res3 : " << res3 << "\n";
 
-    // doesn't work for lists
+    std::list<std::pair<int, int>> l1{{0,1}, {1,0}, {3,4}};
+    std::list<std::pair<int, int>> l2{{1,1}, {1,0}, {3,5}};
+    auto res4 = levenshtein(begin(l1), end(l1), begin(l2), end(l2));
+    std::cout << "res4 : " << res4 << "\n";
 
     return 0;
 }
