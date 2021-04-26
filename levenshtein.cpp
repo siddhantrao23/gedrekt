@@ -7,11 +7,14 @@
 #include <list>
 
 template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
-int levenshtein(const ptr_t begin1, const ptr_t end1, const ptr_t begin2, const ptr_t end2, eq_pred_t equals = eq_pred_t())
+int levenshtein(const ptr_t begin1, const ptr_t end1,
+                const ptr_t begin2, const ptr_t end2,
+                const eq_pred_t equals = eq_pred_t())
 {
     int deletion_cost, insertion_cost, substitution_cost;
 
     // gets sizes of the collection
+    // NOTE: Should we tradeoff memory for number of iterations?
     int size1 = std::distance(begin1, end1);
     int size2 = std::distance(begin2, end2);
 
@@ -38,6 +41,8 @@ int levenshtein(const ptr_t begin1, const ptr_t end1, const ptr_t begin2, const 
             b2++;
         }
         b1++;
+
+        // Swapping instead of copying, because move semantics are more efficient
         curr.swap(prev);
     }
     return prev[size2];
@@ -48,6 +53,7 @@ int main() {
     std::string b1 = "cat";
     int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), [](auto x, auto y) { return x == y; });
     std::cout << "res1 : " << res1 << "\n";
+
     std::vector<int> v1{10, 20, 30, 40, 50};
     std::vector<int> v2{10, 22, 30, 40, 50};
     auto res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2));
