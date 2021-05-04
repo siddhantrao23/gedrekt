@@ -9,14 +9,17 @@
 struct InsertionCost { int i; InsertionCost(int temp = 1): i(temp){}; };
 struct DeletionCost { int d; DeletionCost(int temp = 1): d(temp){}; };
 struct SubstitutionCost { int s; SubstitutionCost(int temp = 1): s(temp){}; };
+struct TranspositionCost { int t; TranspositionCost(int temp = 1): t(temp){}; };
 
 struct Cost
 {
     InsertionCost ic;
     DeletionCost dc;
     SubstitutionCost sc;
-    Cost():ic(1), dc(1), sc(1) {}
-    Cost(InsertionCost i, DeletionCost d, SubstitutionCost s ):ic(i), dc(d), sc(s) {}
+    TranspositionCost tc;
+    Cost():ic(1), dc(1), sc(1), tc(1) {}
+    Cost(InsertionCost i, DeletionCost d, SubstitutionCost s):ic(i), dc(d), sc(s) {}
+    Cost(InsertionCost i, DeletionCost d, SubstitutionCost s, TranspositionCost t):ic(i), dc(d), sc(s), tc(t) {}
 };
 
 template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
@@ -41,7 +44,7 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
 
     ptr_t b1 = begin1;
     for (int i = 0; i < size1; i++) {
-        curr[0] = i + 1;
+        curr[0] = i + 1;  // TODO: Should this be `(i + 1) * cost.dc.d`??
         ptr_t b2 = begin2;
         for (int j = 0; j < size2; j++) {
             deletion_cost = prev[j + 1] + cost.dc.d;
@@ -62,11 +65,62 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
     return prev[size2];
 }
 
+template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
+int osa(const ptr_t begin1, const ptr_t end1,
+        const ptr_t begin2, const ptr_t end2,
+        const Cost cost = Cost(),
+        const eq_pred_t equals = eq_pred_t())
+{
+    int size1 = std::distance(begin1, end1);
+    int size2 = std::distance(begin2, end2);
+
+    int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
+    std::vector<std::vector<int>> lev_tab(size1+1, std::vector<int>(size2+1));
+
+    for (int i = 0; i < size1 + 1; i++) {
+        lev_tab[i][0] = i;
+    }
+    for (int i = 0; i < size2 + 1; i++) {
+        lev_tab[0][i] = i;
+    }
+
+    ptr_t b1 = begin1;
+    for (int i = 1; i < size1 + 1; i++) {
+        ptr_t b2 = begin2;
+        for (int j = 1; j < size2 + 1; j++) {
+            insertion_cost = lev_tab[i][j-1] + cost.ic.i;
+            deletion_cost = lev_tab[i-1][j] + cost.dc.d;
+            if (equals(*b1, *b2)) {
+                substitution_cost = 0;
+            } else {
+                substitution_cost = lev_tab[i-1][j-1] + cost.sc.s;
+            }
+            lev_tab[i][j] = std::min({insertion_cost, deletion_cost, substitution_cost});
+            bool left_diagonal_is_same = *b1 == *--b2;
+            bool right_diagonal_is_same = *--b1 == *++b2;
+            ++b1;
+            bool is_transposed = left_diagonal_is_same && right_diagonal_is_same;
+            if (i > 1 && j > 1 && is_transposed) {
+                transposition_cost = lev_tab[i-2][j-2] + cost.tc.t;
+                lev_tab[i][j] = std::min({lev_tab[i][j], transposition_cost});
+            }
+            b2++;
+        }
+        b1++;
+    }
+    return lev_tab[size1][size2];
+}
+
 int main() {
     std::string a1 = "car";
     std::string b1 = "cat";
     int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), Cost{}, [](auto x, auto y) { return x == y; });
     std::cout << "res1 : " << res1 << "\n";
+
+    std::string a2 = "car";
+    std::string b2 = "cra";
+    int res42 = osa(begin(a2), end(a2), begin(b2), end(b2), Cost{}, [](auto x, auto y) { return x == y; });
+    std::cout << "res42 : " << res42 << "\n";
 
     std::vector<int> v1{10, 20, 30, 40, 50};
     std::vector<int> v2{10, 22, 30, 40, 50};
