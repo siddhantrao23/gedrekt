@@ -39,16 +39,16 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
     std::vector<int> curr(size2 + 1);
 
     for (int i = 0; i < size2 + 1; i++) {
-        prev[i] = i;
+        prev[i] = i * cost.ic.i;
     }
 
     ptr_t b1 = begin1;
     for (int i = 0; i < size1; i++) {
-        curr[0] = i + 1;  // TODO: Should this be `(i + 1) * cost.dc.d`??
+        curr[0] = (i + 1) * cost.dc.d;
         ptr_t b2 = begin2;
         for (int j = 0; j < size2; j++) {
-            deletion_cost = prev[j + 1] + cost.dc.d;
             insertion_cost = curr[j] + cost.ic.i;
+            deletion_cost = prev[j + 1] + cost.dc.d;
             if (equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
@@ -75,40 +75,44 @@ int osa(const ptr_t begin1, const ptr_t end1,
     int size2 = std::distance(begin2, end2);
 
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
-    std::vector<std::vector<int>> lev_tab(size1+1, std::vector<int>(size2+1));
+    std::vector<int> prevprev(size2 + 1);
+    std::vector<int> prev(size2 + 1);
+    std::vector<int> curr(size2 + 1);
 
     for (int i = 0; i < size1 + 1; i++) {
-        lev_tab[i][0] = i;
-    }
-    for (int i = 0; i < size2 + 1; i++) {
-        lev_tab[0][i] = i;
+        prev[i] = i * cost.ic.i;
     }
 
     ptr_t b1 = begin1;
-    for (int i = 1; i < size1 + 1; i++) {
+    for (int i = 0; i < size1; i++) {
+        curr[0] = (i + 1) * cost.dc.d;
         ptr_t b2 = begin2;
-        for (int j = 1; j < size2 + 1; j++) {
-            insertion_cost = lev_tab[i][j-1] + cost.ic.i;
-            deletion_cost = lev_tab[i-1][j] + cost.dc.d;
+        for (int j = 0; j < size2; j++) {
+            insertion_cost = curr[j] + cost.ic.i;
+            deletion_cost = prev[j+1] + cost.dc.d;
             if (equals(*b1, *b2)) {
-                substitution_cost = 0;
+                substitution_cost = prev[j];
             } else {
-                substitution_cost = lev_tab[i-1][j-1] + cost.sc.s;
+                substitution_cost = prev[j] + cost.sc.s;
             }
-            lev_tab[i][j] = std::min({insertion_cost, deletion_cost, substitution_cost});
-            bool left_diagonal_is_same = *b1 == *--b2;
-            bool right_diagonal_is_same = *--b1 == *++b2;
-            ++b1;
-            bool is_transposed = left_diagonal_is_same && right_diagonal_is_same;
-            if (i > 1 && j > 1 && is_transposed) {
-                transposition_cost = lev_tab[i-2][j-2] + cost.tc.t;
-                lev_tab[i][j] = std::min({lev_tab[i][j], transposition_cost});
+            curr[j+1] = std::min({insertion_cost, deletion_cost, substitution_cost});
+            if (i > 0 && j > 0) {
+                bool left_diagonal_is_same = *b1 == *--b2;
+                bool right_diagonal_is_same = *--b1 == *++b2;
+                ++b1;
+                bool is_transposed = left_diagonal_is_same && right_diagonal_is_same;
+                if (is_transposed) {
+                    transposition_cost = prevprev[j-1] + cost.tc.t;
+                    curr[j+1] = std::min({curr[j+1], transposition_cost});
+                }
             }
             b2++;
         }
         b1++;
+        prevprev.swap(prev);
+        prev.swap(curr);
     }
-    return lev_tab[size1][size2];
+    return prev[size2];
 }
 
 int main() {
@@ -125,17 +129,20 @@ int main() {
     std::vector<int> v1{10, 20, 30, 40, 50};
     std::vector<int> v2{10, 22, 30, 40, 50};
     Cost c1{InsertionCost(2),DeletionCost(2),SubstitutionCost(2)};
-    Cost c2(InsertionCost(2),DeletionCost(2),SubstitutionCost(2));
-    auto res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c1);
+    int res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c1);
     std::cout << "res2a : " << res2 << "\n";
-    res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c2);
-    std::cout << "res2b : " << res2 << "\n";
+
+    std::vector<int> v3{10, 20, 30, 40, 50};
+    std::vector<int> v4{10, 22, 40, 30, 50};
+    Cost c2(InsertionCost(1),DeletionCost(1),SubstitutionCost(1));
+    int res43 = osa(begin(v3), end(v3), begin(v4), end(v4), c2);
+    std::cout << "res43 : " << res43 << "\n";
 
     int a[] = {1, 2, 3, 4};
     int b[] = {1, 1, 2, 3};
     std::deque<int> d1(a, a + 4);
     std::deque<int> d2(b, b + 4);
-    auto res3 = levenshtein(begin(d1), end(d1), begin(d2), end(d2));
+    int res3 = levenshtein(begin(d1), end(d1), begin(d2), end(d2));
     std::cout << "res3 : " << res3 << "\n";
 
     std::list<std::pair<int, int>> l1{{0,1}, {1,0}, {3,4}};
