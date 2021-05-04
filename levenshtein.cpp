@@ -167,12 +167,17 @@ int main() {
     int res3 = d5.lev();
     std::cout << "res3 : " << res3 << "\n";
 
-    // doesnt work for lists again wot
     std::list<std::pair<int, int>> l1{{0,1}, {1,0}, {3,4}};
     std::list<std::pair<int, int>> l2{{1,1}, {1,0}, {3,5}};
     EditDistance d6(begin(l1), end(l1), begin(l2), end(l2));
     int res4 = d6.lev();
     std::cout << "res4 : " << res4 << "\n";
+
+    std::list<int> l3{10, 20, 30, 40, 50};
+    std::list<int> l4{10, 20, 40, 30, 50};
+    EditDistance d7(begin(l3), end(l3), begin(l4), end(l4), c1);
+    int res5 = d7.lev();
+    std::cout << "res5 : " << res5 << "\n";
 
     return 0;
 }
