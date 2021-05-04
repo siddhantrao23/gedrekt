@@ -22,37 +22,57 @@ struct Cost
     Cost(InsertionCost i, DeletionCost d, SubstitutionCost s, TranspositionCost t):ic(i), dc(d), sc(s), tc(t) {}
 };
 
-template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
-int levenshtein(const ptr_t begin1, const ptr_t end1,
-                const ptr_t begin2, const ptr_t end2,
-                const Cost cost = Cost(),
-                const eq_pred_t equals = eq_pred_t())
+template<typename ptr_t, typename pred_t = std::equal_to<typename ptr_t::value_type>>
+class EditDistance
+{
+public:
+    EditDistance(const ptr_t begin1, const ptr_t end1,
+                 const ptr_t begin2, const ptr_t end2,
+                 const Cost cost = Cost(),
+                 const pred_t equals = pred_t()):
+        _begin1(begin1), _end1(end1),
+        _begin2(begin2), _end2(end2),
+        _cost(cost), _equals(equals) {}
+    int lev();
+    int osa();
+private:
+    ptr_t _begin1;
+    ptr_t _end1;
+    ptr_t _begin2;
+    ptr_t _end2;
+    Cost _cost;
+    pred_t _equals;
+};
+
+template<typename ptr_t, typename pred_t>
+int EditDistance<ptr_t, pred_t>::lev()
 {
     int deletion_cost, insertion_cost, substitution_cost;
 
     // gets sizes of the collection
     // NOTE: Should we tradeoff memory for number of iterations?
-    int size1 = std::distance(begin1, end1);
-    int size2 = std::distance(begin2, end2);
+    // TODO: Make these part of the class
+    int size1 = std::distance(_begin1, _end1);
+    int size2 = std::distance(_begin2, _end2);
 
     std::vector<int> prev(size2 + 1);
     std::vector<int> curr(size2 + 1);
 
     for (int i = 0; i < size2 + 1; i++) {
-        prev[i] = i * cost.ic.i;
+        prev[i] = i * _cost.ic.i;
     }
 
-    ptr_t b1 = begin1;
+    ptr_t b1 = _begin1;
     for (int i = 0; i < size1; i++) {
-        curr[0] = (i + 1) * cost.dc.d;
-        ptr_t b2 = begin2;
+        curr[0] = (i + 1) * _cost.dc.d;
+        ptr_t b2 = _begin2;
         for (int j = 0; j < size2; j++) {
-            insertion_cost = curr[j] + cost.ic.i;
-            deletion_cost = prev[j + 1] + cost.dc.d;
+            insertion_cost = curr[j] + _cost.ic.i;
+            deletion_cost = prev[j + 1] + _cost.dc.d;
             if (equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
-                substitution_cost = prev[j] + cost.sc.s;
+                substitution_cost = prev[j] + _cost.sc.s;
             }
             curr[j+1] = std::min({deletion_cost, insertion_cost, substitution_cost});
             b2++;
@@ -65,14 +85,11 @@ int levenshtein(const ptr_t begin1, const ptr_t end1,
     return prev[size2];
 }
 
-template<typename ptr_t, typename eq_pred_t = std::equal_to<typename ptr_t::value_type>>
-int osa(const ptr_t begin1, const ptr_t end1,
-        const ptr_t begin2, const ptr_t end2,
-        const Cost cost = Cost(),
-        const eq_pred_t equals = eq_pred_t())
+template<typename ptr_t, typename pred_t>
+int EditDistance<ptr_t, pred_t>::osa()
 {
-    int size1 = std::distance(begin1, end1);
-    int size2 = std::distance(begin2, end2);
+    int size1 = std::distance(_begin1, _end1);
+    int size2 = std::distance(_begin2, _end2);
 
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
     std::vector<int> prevprev(size2 + 1);
@@ -80,20 +97,20 @@ int osa(const ptr_t begin1, const ptr_t end1,
     std::vector<int> curr(size2 + 1);
 
     for (int i = 0; i < size1 + 1; i++) {
-        prev[i] = i * cost.ic.i;
+        prev[i] = i * _cost.ic.i;
     }
 
-    ptr_t b1 = begin1;
+    ptr_t b1 = _begin1;
     for (int i = 0; i < size1; i++) {
-        curr[0] = (i + 1) * cost.dc.d;
-        ptr_t b2 = begin2;
+        curr[0] = (i + 1) * _cost.dc.d;
+        ptr_t b2 = _begin2;
         for (int j = 0; j < size2; j++) {
-            insertion_cost = curr[j] + cost.ic.i;
-            deletion_cost = prev[j+1] + cost.dc.d;
+            insertion_cost = curr[j] + _cost.ic.i;
+            deletion_cost = prev[j+1] + _cost.dc.d;
             if (equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
-                substitution_cost = prev[j] + cost.sc.s;
+                substitution_cost = prev[j] + _cost.sc.s;
             }
             curr[j+1] = std::min({insertion_cost, deletion_cost, substitution_cost});
             if (i > 0 && j > 0) {
@@ -102,7 +119,7 @@ int osa(const ptr_t begin1, const ptr_t end1,
                 ++b1;
                 bool is_transposed = left_diagonal_is_same && right_diagonal_is_same;
                 if (is_transposed) {
-                    transposition_cost = prevprev[j-1] + cost.tc.t;
+                    transposition_cost = prevprev[j-1] + _cost.tc.t;
                     curr[j+1] = std::min({curr[j+1], transposition_cost});
                 }
             }
@@ -123,6 +140,7 @@ int main() {
 
     std::string a2 = "car";
     std::string b2 = "cra";
+
     int res42 = osa(begin(a2), end(a2), begin(b2), end(b2), Cost{}, [](auto x, auto y) { return x == y; });
     std::cout << "res42 : " << res42 << "\n";
 
