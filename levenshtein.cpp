@@ -171,7 +171,7 @@ int main() {
     std::list<std::pair<int, int>> l1{{0,1}, {1,0}, {3,4}};
     std::list<std::pair<int, int>> l2{{1,1}, {1,0}, {3,5}};
     EditDistance d6(begin(l1), end(l1), begin(l2), end(l2));
-    int res4 = d6.lev()
+    int res4 = d6.lev();
     std::cout << "res4 : " << res4 << "\n";
 
     return 0;
