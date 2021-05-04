@@ -32,10 +32,16 @@ public:
                  const pred_t equals = pred_t()):
         _begin1(begin1), _end1(end1),
         _begin2(begin2), _end2(end2),
-        _cost(cost), _equals(equals) {}
+        _cost(cost), _equals(equals)
+        {
+            _size1 = std::distance(_begin1, _end1);
+            _size2 = std::distance(_begin2, _end2);
+        }
     int lev();
     int osa();
 private:
+    int _size1;
+    int _size2;
     ptr_t _begin1;
     ptr_t _end1;
     ptr_t _begin2;
@@ -51,25 +57,21 @@ int EditDistance<ptr_t, pred_t>::lev()
 
     // gets sizes of the collection
     // NOTE: Should we tradeoff memory for number of iterations?
-    // TODO: Make these part of the class
-    int size1 = std::distance(_begin1, _end1);
-    int size2 = std::distance(_begin2, _end2);
+    std::vector<int> prev(_size2 + 1);
+    std::vector<int> curr(_size2 + 1);
 
-    std::vector<int> prev(size2 + 1);
-    std::vector<int> curr(size2 + 1);
-
-    for (int i = 0; i < size2 + 1; i++) {
+    for (int i = 0; i < _size2 + 1; i++) {
         prev[i] = i * _cost.ic.i;
     }
 
     ptr_t b1 = _begin1;
-    for (int i = 0; i < size1; i++) {
+    for (int i = 0; i < _size1; i++) {
         curr[0] = (i + 1) * _cost.dc.d;
         ptr_t b2 = _begin2;
-        for (int j = 0; j < size2; j++) {
+        for (int j = 0; j < _size2; j++) {
             insertion_cost = curr[j] + _cost.ic.i;
             deletion_cost = prev[j + 1] + _cost.dc.d;
-            if (equals(*b1, *b2)) {
+            if (_equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
                 substitution_cost = prev[j] + _cost.sc.s;
@@ -82,32 +84,29 @@ int EditDistance<ptr_t, pred_t>::lev()
         // Swapping instead of copying, because move semantics are more efficient
         curr.swap(prev);
     }
-    return prev[size2];
+    return prev[_size2];
 }
 
 template<typename ptr_t, typename pred_t>
 int EditDistance<ptr_t, pred_t>::osa()
 {
-    int size1 = std::distance(_begin1, _end1);
-    int size2 = std::distance(_begin2, _end2);
-
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
-    std::vector<int> prevprev(size2 + 1);
-    std::vector<int> prev(size2 + 1);
-    std::vector<int> curr(size2 + 1);
+    std::vector<int> prevprev(_size2 + 1);
+    std::vector<int> prev(_size2 + 1);
+    std::vector<int> curr(_size2 + 1);
 
-    for (int i = 0; i < size1 + 1; i++) {
+    for (int i = 0; i < _size1 + 1; i++) {
         prev[i] = i * _cost.ic.i;
     }
 
     ptr_t b1 = _begin1;
-    for (int i = 0; i < size1; i++) {
+    for (int i = 0; i < _size1; i++) {
         curr[0] = (i + 1) * _cost.dc.d;
         ptr_t b2 = _begin2;
-        for (int j = 0; j < size2; j++) {
+        for (int j = 0; j < _size2; j++) {
             insertion_cost = curr[j] + _cost.ic.i;
             deletion_cost = prev[j+1] + _cost.dc.d;
-            if (equals(*b1, *b2)) {
+            if (_equals(*b1, *b2)) {
                 substitution_cost = prev[j];
             } else {
                 substitution_cost = prev[j] + _cost.sc.s;
@@ -129,43 +128,50 @@ int EditDistance<ptr_t, pred_t>::osa()
         prevprev.swap(prev);
         prev.swap(curr);
     }
-    return prev[size2];
+    return prev[_size2];
 }
 
 int main() {
     std::string a1 = "car";
     std::string b1 = "cat";
-    int res1 = levenshtein(begin(a1), end(a1), begin(b1), end(b1), Cost{}, [](auto x, auto y) { return x == y; });
+    EditDistance d1(begin(a1), end(a1), begin(b1), end(b1), Cost{}, [](auto x, auto y) { return x == y; });
+    int res1 = d1.lev();
     std::cout << "res1 : " << res1 << "\n";
 
     std::string a2 = "car";
     std::string b2 = "cra";
 
-    int res42 = osa(begin(a2), end(a2), begin(b2), end(b2), Cost{}, [](auto x, auto y) { return x == y; });
+    EditDistance d2(begin(a2), end(a2), begin(b2), end(b2), Cost{}, [](auto x, auto y) { return x == y; });
+    int res42 = d2.osa();
     std::cout << "res42 : " << res42 << "\n";
 
     std::vector<int> v1{10, 20, 30, 40, 50};
     std::vector<int> v2{10, 22, 30, 40, 50};
     Cost c1{InsertionCost(2),DeletionCost(2),SubstitutionCost(2)};
-    int res2 = levenshtein(begin(v1), end(v1), begin(v2), end(v2), c1);
+    EditDistance d3(begin(v1), end(v1), begin(v2), end(v2), c1);
+    int res2 = d3.lev();
     std::cout << "res2a : " << res2 << "\n";
 
     std::vector<int> v3{10, 20, 30, 40, 50};
     std::vector<int> v4{10, 22, 40, 30, 50};
     Cost c2(InsertionCost(1),DeletionCost(1),SubstitutionCost(1));
-    int res43 = osa(begin(v3), end(v3), begin(v4), end(v4), c2);
+    EditDistance d4(begin(v3), end(v3), begin(v4), end(v4), c2);
+    int res43 = d4.osa();
     std::cout << "res43 : " << res43 << "\n";
 
     int a[] = {1, 2, 3, 4};
     int b[] = {1, 1, 2, 3};
-    std::deque<int> d1(a, a + 4);
-    std::deque<int> d2(b, b + 4);
-    int res3 = levenshtein(begin(d1), end(d1), begin(d2), end(d2));
+    std::deque<int> dq1(a, a + 4);
+    std::deque<int> dq2(b, b + 4);
+    EditDistance d5(begin(dq1), end(dq1), begin(dq2), end(dq2));
+    int res3 = d5.lev();
     std::cout << "res3 : " << res3 << "\n";
 
+    // doesnt work for lists again wot
     std::list<std::pair<int, int>> l1{{0,1}, {1,0}, {3,4}};
     std::list<std::pair<int, int>> l2{{1,1}, {1,0}, {3,5}};
-    auto res4 = levenshtein(begin(l1), end(l1), begin(l2), end(l2));
+    EditDistance d6(begin(l1), end(l1), begin(l2), end(l2));
+    int res4 = d6.lev()
     std::cout << "res4 : " << res4 << "\n";
 
     return 0;
