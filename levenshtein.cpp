@@ -37,8 +37,12 @@ public:
             _size1 = std::distance(_begin1, _end1);
             _size2 = std::distance(_begin2, _end2);
         }
-    int lev();
-    int osa();
+    EditDistance(const ptr_t s1, const ptr_t s2,
+                 const Cost cost = Cost()):
+        _size1(s1), _size2(s2), _cost(cost) {}
+    int lev() const;
+    int osa() const;
+    int hamming() const;
 private:
     int _size1;
     int _size2;
@@ -51,7 +55,7 @@ private:
 };
 
 template<typename ptr_t, typename pred_t>
-int EditDistance<ptr_t, pred_t>::lev()
+int EditDistance<ptr_t, pred_t>::lev() const
 {
     int deletion_cost, insertion_cost, substitution_cost;
 
@@ -88,7 +92,7 @@ int EditDistance<ptr_t, pred_t>::lev()
 }
 
 template<typename ptr_t, typename pred_t>
-int EditDistance<ptr_t, pred_t>::osa()
+int EditDistance<ptr_t, pred_t>::osa() const
 {
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
     std::vector<int> prevprev(_size2 + 1);
@@ -131,12 +135,37 @@ int EditDistance<ptr_t, pred_t>::osa()
     return prev[_size2];
 }
 
+template<typename ptr_t, typename pred_t>
+int EditDistance<ptr_t, pred_t>::hamming() const
+{
+    if constexpr(std::is_integral<ptr_t>::value) {
+        std::cout << "optimized\n";
+        return __builtin_popcount(_size1 ^ _size2);
+    } else {
+        ptr_t b1 = _begin1;
+        ptr_t e1 = _end1;
+        ptr_t b2 = _begin2;
+        ptr_t e2 = _end2;
+        int res = 0;
+        while (b1 != e1 || b2 != e2) {
+            if (*b1++ != *b2++) {
+                res += _cost.sc.s;
+            }
+        }
+        return res;
+    }
+}
+
 int main() {
+    EditDistance<int, std::equal_to<int>> dnum(0b1010, 0b1001);
+    std::cout << dnum.lev() << "\n";
     std::string a1 = "car";
     std::string b1 = "cat";
     EditDistance d1(begin(a1), end(a1), begin(b1), end(b1), Cost{}, [](auto x, auto y) { return x == y; });
     int res1 = d1.lev();
+    int res1ham = d1.hamming();
     std::cout << "res1 : " << res1 << "\n";
+    std::cout << "res1ham : " << res1ham << "\n";
 
     std::string a2 = "car";
     std::string b2 = "cra";
