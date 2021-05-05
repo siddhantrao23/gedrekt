@@ -37,15 +37,22 @@ public:
             _size1 = std::distance(_begin1, _end1);
             _size2 = std::distance(_begin2, _end2);
         }
-    EditDistance(const ptr_t s1, const ptr_t s2,
+    EditDistance(ptr_t s1, ptr_t s2,
                  const Cost cost = Cost()):
-        _size1(s1), _size2(s2), _cost(cost) {}
+        _s1(s1), _s2(s2), _cost(cost)
+    {
+        while (s1) {
+            std::vector<bool>
+        }
+    }
     int lev() const;
     int osa() const;
     int hamming() const;
 private:
     int _size1;
     int _size2;
+    int _s1;
+    int _s2;
     ptr_t _begin1;
     ptr_t _end1;
     ptr_t _begin2;
@@ -140,7 +147,7 @@ int EditDistance<ptr_t, pred_t>::hamming() const
 {
     if constexpr(std::is_integral<ptr_t>::value) {
         std::cout << "optimized\n";
-        return __builtin_popcount(_size1 ^ _size2);
+        return __builtin_popcount(_s1 ^ _s2);
     } else {
         ptr_t b1 = _begin1;
         ptr_t e1 = _end1;
