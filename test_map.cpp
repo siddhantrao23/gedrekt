@@ -29,7 +29,7 @@ int main()
     std::cout << "maps:\n";
     print_map(a1);
     print_map(b1);
-    std::cout << "Vector with modulo 10 equality\n";
+    std::cout << "Map with equality check on the value\n";
     std::cout << "------------------------------------------------------\n";
     std::cout << "hamming distance                  : " << ham << "\n";
     std::cout << "levenshtein distance              : " << lev << "\n";
