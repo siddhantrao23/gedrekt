@@ -21,12 +21,12 @@ struct Cost
     Cost(InsertionCost i, DeletionCost d, SubstitutionCost s, TranspositionCost t):ic(i), dc(d), sc(s), tc(t) {}
 };
 
-template <typename ptr_t, typename pred_t = std::equal_to<typename ptr_t::value_type>>
+template <typename ptr1, typename ptr2, typename pred_t = std::equal_to<typename ptr1::value_type>>
 class EditDistance
 {
 public:
-    EditDistance(const ptr_t begin1, const ptr_t end1,
-                 const ptr_t begin2, const ptr_t end2,
+    EditDistance(const ptr1 begin1, const ptr1 end1,
+                 const ptr2 begin2, const ptr2 end2,
                  const Cost cost = Cost(),
                  const pred_t equals = pred_t()):
         _begin1(begin1), _end1(end1),
@@ -42,16 +42,16 @@ public:
 private:
     int _size1;
     int _size2;
-    ptr_t _begin1;
-    ptr_t _end1;
-    ptr_t _begin2;
-    ptr_t _end2;
+    ptr1 _begin1;
+    ptr1 _end1;
+    ptr2 _begin2;
+    ptr2 _end2;
     Cost _cost;
     pred_t _equals;
 };
 
-template <typename ptr_t, typename pred_t>
-int EditDistance<ptr_t, pred_t>::lev() const
+template <typename ptr1, typename ptr2, typename pred_t>
+int EditDistance<ptr1, ptr2, pred_t>::lev() const
 {
     int deletion_cost, insertion_cost, substitution_cost;
 
@@ -87,8 +87,8 @@ int EditDistance<ptr_t, pred_t>::lev() const
     return prev[_size2];
 }
 
-template <typename ptr_t, typename pred_t>
-int EditDistance<ptr_t, pred_t>::osa() const
+template <typename ptr1, typename ptr2, typename pred_t>
+int EditDistance<ptr1, ptr2, pred_t>::osa() const
 {
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
     std::vector<int> prevprev(_size2 + 1);
@@ -99,10 +99,10 @@ int EditDistance<ptr_t, pred_t>::osa() const
         prev[i] = i * _cost.ic.i;
     }
 
-    ptr_t b1 = _begin1;
+    auto b1 = _begin1;
     for (int i = 0; i < _size1; i++) {
         curr[0] = (i + 1) * _cost.dc.d;
-        ptr_t b2 = _begin2;
+        auto b2 = _begin2;
         for (int j = 0; j < _size2; j++) {
             insertion_cost = curr[j] + _cost.ic.i;
             deletion_cost = prev[j+1] + _cost.dc.d;
@@ -131,13 +131,13 @@ int EditDistance<ptr_t, pred_t>::osa() const
     return prev[_size2];
 }
 
-template <typename ptr_t, typename pred_t>
-int EditDistance<ptr_t, pred_t>::hamming() const
+template <typename ptr1, typename ptr2, typename pred_t>
+int EditDistance<ptr1, ptr2, pred_t>::hamming() const
 {
-    ptr_t b1 = _begin1;
-    ptr_t e1 = _end1;
-    ptr_t b2 = _begin2;
-    ptr_t e2 = _end2;
+    auto b1 = _begin1;
+    auto e1 = _end1;
+    auto b2 = _begin2;
+    auto e2 = _end2;
     int res = 0;
     while (b1 != e1 || b2 != e2) {
         if (*b1++ != *b2++) {
