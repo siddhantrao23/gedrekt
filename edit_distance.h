@@ -134,13 +134,15 @@ int EditDistance<ptr1, ptr2, pred_t>::osa() const
 template <typename ptr1, typename ptr2, typename pred_t>
 int EditDistance<ptr1, ptr2, pred_t>::hamming() const
 {
+    if (_size1 != _size2)
+        return -1;
     auto b1 = _begin1;
     auto e1 = _end1;
     auto b2 = _begin2;
     auto e2 = _end2;
     int res = 0;
-    while (b1 != e1 || b2 != e2) {
-        if (*b1++ != *b2++) {
+    while (b1 != e1) {
+        if (!_equals(*b1++, *b2++)) {
             res += _cost.sc.s;
         }
     }

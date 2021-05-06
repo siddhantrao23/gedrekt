@@ -47,10 +47,11 @@ void print_nuc(Nucleotide n)
 
 int main()
 {
-    int lev, osa;
+    int ham, lev, osa;
     Nucleotide a1 {'A', 'G', 'C', 'T', 'G'};
     Nucleotide b1 {'C', 'T', 'A', 'G'};
     EditDistance d1(std::begin(a1), std::end(a1), std::begin(b1), std::end(b1));
+    ham = d1.hamming();
     lev = d1.lev();
     osa = d1.osa();
     std::cout << "Test Case 1\n";
@@ -59,7 +60,7 @@ int main()
     print_nuc(b1);
     std::cout << "User-defined object: Nucleotide\n";
     std::cout << "------------------------------------------------------\n";
-    std::cout << "hamming distance                  : " << "NA" << "\n";
+    std::cout << "hamming distance                  : " << ham << " (N/A)" << "\n";
     std::cout << "levenshtein distance              : " << lev << "\n";
     std::cout << "optimal string alignment distance : " << osa << "\n";
     std::cout << "------------------------------------------------------\n\n";

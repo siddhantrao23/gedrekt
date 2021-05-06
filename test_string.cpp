@@ -25,6 +25,7 @@ int main()
     std::string b2 = "acbdf";
     EditDistance d2(begin(a2), end(a2), begin(b2), end(b2),
                     Cost(InsertionCost(1), DeletionCost(3), SubstitutionCost(1)));
+    ham = d2.hamming();
     lev = d2.lev();
     osa = d2.osa();
     std::cout << "Test Case 2\n";
@@ -32,7 +33,7 @@ int main()
     std::cout << "String of different lengths;\n";
     std::cout << "Deletion cost = 3, rest are 1\n";
     std::cout << "------------------------------------------------------\n";
-    std::cout << "hamming                           : " << "NA" << "\n";
+    std::cout << "hamming                           : " << ham << " (N/A)" << "\n";
     std::cout << "levenshtein                       : " << lev << "\n";
     std::cout << "optimal string alignment distance : " << osa << "\n";
     std::cout << "------------------------------------------------------\n";
