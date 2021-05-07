@@ -1,4 +1,8 @@
+#include <iostream>
+#include <limits>
 #include <vector>
+#include <set>
+#include <queue>
 #include <iterator>
 #include <functional>
 
@@ -39,6 +43,8 @@ public:
     int lev() const;
     int osa() const;
     int hamming() const;
+    template <typename T>
+    std::pair<std::vector<std::vector<T>>, int> readersdigest(T, T, std::set<T>, std::set<typename T::value_type>) const;
 private:
     int _size1;
     int _size2;
@@ -148,6 +154,55 @@ int EditDistance<ptr1, ptr2, pred_t>::hamming() const
         }
     }
     return res;
+}
+
+template <typename ptr1, typename ptr2, typename pred_t>
+template <typename T>
+std::pair<std::vector<std::vector<T>>, int> EditDistance<ptr1, ptr2, pred_t>::readersdigest(
+    T start, T target, std::set<T> dictionary,
+    std::set<typename T::value_type> alphabet) const
+{
+    using res_type = std::vector<std::vector<T>>;
+    std::vector<std::vector<T>> ans;
+    std::queue<std::vector<T>> paths;
+    paths.push({start});
+    int level = 1;
+    int min_level = std::numeric_limits<int>::max();
+
+    std::set<T> visited;
+
+    while (!paths.empty()) {
+        std::vector<T> path = paths.front();
+        paths.pop();
+        if (path.size() > level) {
+            for (auto w : visited) dictionary.erase(w);
+            visited.clear();
+            if (path.size() > min_level)
+                break;
+            else
+                level = path.size();
+        }
+        T last = path.back();
+        for (int i = 0; i < last.size(); ++i) {
+            T next = last;
+            for (auto c: alphabet) {
+                next[i] = c;
+                if (dictionary.find(next) != dictionary.end()) {
+                    std::vector<T> newpath = path;
+                    newpath.push_back(next);
+                    visited.insert(next);
+                    if (next == target) {
+                        min_level = level;
+                        ans.push_back(newpath);
+                    }
+                    else
+                        paths.push(newpath);
+                }
+            }
+        }
+    }
+    int final_cost = (ans[0].size() - 1) * _cost.sc.s;
+    return std::pair<res_type, int> (ans, final_cost);
 }
 
 #endif // __EDIT_DISTANCE_H_
