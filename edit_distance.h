@@ -92,8 +92,9 @@ int EditDistance<ptr1, ptr2, pred_t>::osa() const
 {
     int deletion_cost, insertion_cost, substitution_cost, transposition_cost;
     std::vector<int> prevprev(_size2 + 1);
-    std::vector<int> prev(_size2 + 1);
     std::vector<int> curr(_size2 + 1);
+    std::vector<int> prev(_size2 + 1);
+    
 
     for (int i = 0; i < _size1 + 1; i++) {
         prev[i] = i * _cost.ic.i;
