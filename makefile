@@ -1,6 +1,7 @@
 CXXFLAGS=--std=c++2a
 EXEC:=$(wildcard test_*)
 
+binaries=test_string test_vector test_deque_list test_nucleotide test_map
 all: test_string test_vector test_deque_list test_nucleotide test_map
 
 test_string.o: test_string.cpp edit_distance.h
@@ -33,3 +34,6 @@ test_map.o: test_map.cpp edit_distance.h
 
 test_map: test_map.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+clean:
+	rm -f $(binaries) *.o
