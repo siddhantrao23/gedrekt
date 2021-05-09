@@ -1,4 +1,4 @@
-# Edit Distance 
+# Generic Edit Distance
 
 Edit distance is generally used as a metric to measure the degree of dissimilarity between two strings. It is defined as the minimum number of operations required to transform one string to the other by using any subset of the operations insertion, deletion, substitution and transposition.
 
@@ -28,10 +28,6 @@ d.lev();
 d.ost();
 d.readers_digest();
 ```
-
-# Modification
-
-Convert one container to another, using single item substitution operations, such that the source container, target container and the intermediate containers formed as a result of the substitutions belong to a dictionary.
 
 # Building and Testing
 
